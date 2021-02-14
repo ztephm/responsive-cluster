@@ -260,38 +260,7 @@
   @txt: #FFF;
   @stroke: #BC5E58;
 
-  Map {
-    buffer-size:256;
-  }
-  #layer::outline {
-    marker-fill-opacity: 0;
-    marker-line-color: @stroke;
-    marker-line-width: 0;
-    marker-line-opacity: 1;
-    marker-allow-overlap: true;
-    marker-comp-op: dst-atop;
-
-    [src = 'bucketE'] {
-      marker-width: 42;
-      marker-line-width: 3;
-    }
-    [src = 'bucketD'] {
-      marker-width: 55;
-      marker-line-width: 4;
-    }
-    [src = 'bucketC'] {
-      marker-width: 74;
-      marker-line-width: 4;
-    }
-    [src = 'bucketB'] {
-      marker-width: 104;
-      marker-line-width: 4;
-    }
-    [src = 'bucketA'] {
-      marker-width: 143;
-      marker-line-width: 6;
-    }
-  }
+  Map { buffer-size:256; }
   #layer {
     marker-width: 26px;
     marker-fill: @clusterFill;
