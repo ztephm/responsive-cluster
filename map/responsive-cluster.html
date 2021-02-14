@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Points to Clusters</title>
+  <meta name='viewport' content='initial-scale=1.0, user-scalable=no' />
+  <meta http-equiv='content-type' content='text/html; charset=UTF-8'/>
+  <link rel='shortcut icon' href='http://cartodb.com/assets/favicon.ico' />
+  <link rel='stylesheet' href='https://unpkg.com/leaflet-easybutton@2.0.0/src/easy-button.css'>
+  <link rel='stylesheet' href='https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/themes/css/cartodb.css' />
+  <style>
+  html, body {
+    height: 100%;
+    padding: 0;
+    margin: 0;
+  }
+  #map {
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    margin: 0 auto;
+  }
+  /* override default cartodb styles */
+  @media (max-width: 550px) {
+    /* infowindows */
+    div.cartodb-popup {
+      position: relative;
+      width: 140px;
+      height: auto;
+      padding: 7px 0 0;
+      margin: 0;
+      background: url(../images/light_top_140wide.png) no-repeat 0 0;
+    }
+    div.cartodb-popup div.cartodb-popup-tip-container {
+      width: 140px;
+      height: 20px;
+      background: url(../images/light_tip_140wide.png) no-repeat 0 0;
+    }
+    div.cartodb-popup a.cartodb-popup-close-button {
+      position: absolute;
+      top: -9px;
+      right: -9px;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      background: url(../images/light_x_140wide.png) no-repeat 0 0;
+      text-indent: -9999px;
+      font-size: 0;
+      line-height: 0;
+      opacity: 1;
+      -ms-filter: "alpha(Opacity=100)";
+      filter: alpha(Opacity=1);
+      filter: alpha(opacity=100);
+      text-transform: uppercase;
+      z-index: 3;
+    }
+    div.cartodb-popup div.cartodb-popup-content-wrapper {
+      width: 140px;
+      max-width: 140px;
+      padding: 12px 12px;
+      overflow-x: hidden;
+      background: url(../images/light_140wide.png) repeat-y 0 0;
+    }
+    div.cartodb-popup div.cartodb-popup-content {
+      display: block;
+      width: 140px;
+      max-width: 140px !important;
+      min-height: 5px;
+      height: auto;
+      max-height: 185px;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      overflow-x: hidden!important;
+      outline: 0;
+      text-align: left;
+    }
+    div.cartodb-popup p {
+        display: block;
+        width: 135px;
+        max-width: 135px !important; /* set less than max width of container so text doesn't run into margins */
+        margin: 0;
+        padding: 0 0 7px;
+        font-weight: 300;
+        font-family: "Helvetica Neue", Helvetica, Arial;
+        font-size: 15px;
+        letter-spacing: .7px;
+        word-wrap: break-word;
+    }
+    div.cartodb-popup h4 {
+      display: block;
+      width: 135px;
+      max-width: 135px !important; /* set less than max width of container so text doesn't run into margins */
+      margin: 0;
+      padding: 0;
+      font-weight: 400;
+      font-family: "Helvetica Neue", Helvetica, Arial;
+      font-size: 14px;
+      letter-spacing: 1px;
+      color: #9E341F;
+      text-transform: uppercase;
+      word-wrap: break-word;
+      line-height: 120%;
+    }
+
+    /* legend */
+    div.cartodb-legend {
+      position: absolute;
+      bottom: 35px;
+      right: 20px;
+      width: 130px;
+      max-width: 130px;
+      padding: 13px 15px 14px;
+      font-weight: 300;
+      font-family: "Helvetica Neue", Helvetica, Arial;
+      font-size: 15px;
+      letter-spacing: .7px;
+      color: #000;
+      text-align: left;
+      webkit-box-shadow: rgba(0,0,0,.2) 0 0 4px 2px;
+      -moz-box-shadow: rgba(0,0,0,.2) 0 0 4px 2px;
+      box-shadow: rgba(0,0,0,.2) 0 0 4px 2px;
+      -webkit-border-radius: 4px;
+      -moz-border-radius: 4px;
+      -ms-border-radius: 4px;
+      -o-border-radius: 4px;
+      border-radius: 4px;
+      border: 1px solid #999;
+      background: #fff;
+      z-index: 500;
+    }
+    div.cartodb-legend .legend-title {
+      margin: 0 0 10px;
+      text-align: left;
+      color: #595959;
+      font-weight: 400;
+      letter-spacing: 1px;
+      font-size: 13px;
+      text-transform: uppercase;
+      width: 130px;
+      max-width: 130px !important;
+      word-wrap: break-word;
+    }
+    div.cartodb-legend ul li, legend.custom ul li {
+      position: relative;
+      margin: 0 0 7px;
+      color: #000 !important;
+      font-weight: 400 !important;
+      font-family: "Helvetica Neue", Helvetica, Arial;
+      font-size: 15px !important;
+      letter-spacing: .7px !important;
+      text-transform: uppercase;
+      text-align: left;
+      height: 15px !important;
+      line-height: 15px !important;
+      vertical-align: middle;
+      width: 130px;
+      max-width: 130px !important;
+      word-wrap: break-word;
+    }
+    div.cartodb-legend.category ul li .bullet, div.cartodb-legend.color ul li .bullet, div.cartodb-legend.custom ul li .bullet {
+      float: left;
+      margin: 2px 7px 0 0;
+      width: 5px;
+      height: 5px;
+      -webkit-border-radius: 50%;
+      -moz-border-radius: 50%;
+      -ms-border-radius: 50%;
+      -o-border-radius: 50%;
+      border-radius: 50%;
+      padding: 2px;
+      background: #fff;
+      border: 1px solid rgba(0,0,0,.2);
+      z-index: 1000;
+    }
+  }
+  /* leaflet-easybutton customizations*/
+  .button-state {
+    width: 15px;
+    height: 15px;
+  }
+  .btn {
+    width: 15px;
+    height: 15px;
+    padding: 0;
+    margin-left: -4%;
+    margin-bottom: -5%;
+  }
+  /* hack easy-button.2.0 css to match leaflet.1.2 css for disabled buttons */
+  .leaflet-bar.disabled,
+  .leaflet-bar button.disabled {
+    cursor: default;
+    pointer-events: none;
+    background-color: #f4f4f4;
+    opacity: 1;
+  }
+  .leaflet-bar button.disabled img.btn {
+    /* work-around to not set color for svg */
+    opacity: .3;
+  }
+  .leaflet-bar a:hover {
+    background-color: #f4f4f4 !important;
+  }
+
+  /* for retina */
+  @media
+  only screen and (-webkit-min-device-pixel-ratio: 2),
+  only screen and (   min--moz-device-pixel-ratio: 2),
+  only screen and (     -o-min-device-pixel-ratio: 2/1),
+  only screen and (        min-device-pixel-ratio: 2),
+  only screen and (                min-resolution: 192dpi),
+  only screen and (                min-resolution: 2dppx) {
+    .button-state {
+      width: 15px;
+      height: 15px;
+    }
+    .btn {
+      width: 15px;
+      height: 15px;
+      padding: 0;
+      margin-left: -45%;
+      margin-bottom: -35%;
+    }
+  }
+
+  </style>
+  <style type="cartocss/text" id="pointStyle">
+  #layer {
+    marker-width: 8;
+    marker-fill: #ED645A;
+    marker-fill-opacity: 0.8;
+    marker-line-color: #FFF;
+    marker-line-width: .5;
+    marker-line-opacity: 1;
+    marker-placement: point;
+    marker-type: ellipse;
+    marker-allow-overlap: true;
+    marker-comp-op: hard-light;
+
+    [zoom < 14]{
+      marker-line-width: .2;
+    }
+    [zoom < 12]{
+      marker-width: 6;
+    }
+    [zoom < 11]{
+      marker-width: 4;
+    }
+    [zoom < 10]{
+      marker-width: 3;
+    }
+    [zoom < 9]{
+      marker-line-opacity: 0;
+      marker-line-width: 0;
+    }
+  }
+  </style>
+  <style type="cartocss/text" id="clusterStyle">
+  @halo: #e0372f;
+  @clusterFill: #F75F59; /* more saturated cartocolor b/c opacity change + web aim WCAG AA large text acceptable contrast ratio */
+  @txt: #FFF;
+  @stroke: #BC5E58;
+
+  Map {
+    buffer-size:256;
+  }
+  #layer::outline {
+    marker-fill-opacity: 0;
+    marker-line-color: @stroke;
+    marker-line-width: 0;
+    marker-line-opacity: 1;
+    marker-allow-overlap: true;
+    marker-comp-op: dst-atop;
+
+    [src = 'bucketE'] {
+      marker-width: 42;
+      marker-line-width: 3;
+    }
+    [src = 'bucketD'] {
+      marker-width: 55;
+      marker-line-width: 4;
+    }
+    [src = 'bucketC'] {
+      marker-width: 74;
+      marker-line-width: 4;
+    }
+    [src = 'bucketB'] {
+      marker-width: 104;
+      marker-line-width: 4;
+    }
+    [src = 'bucketA'] {
+      marker-width: 143;
+      marker-line-width: 6;
+    }
+  }
+  #layer {
+    marker-width: 26px;
+    marker-fill: @clusterFill;
+    marker-fill-opacity: .8;
+    marker-line-width: 0;
+    marker-line-opacity: 0;
+    marker-allow-overlap: true;
+
+    /* points_count > 2 */
+    /* Range Grading based on min pixel size instead of values */
+    /* 26 * 1.5 = 39, adjusting to increase optical difference */
+    [src = 'bucketE'] {
+      marker-width: 39;
+      marker-comp-op: hard-light;
+    }
+    /* points_count > 144 * 0.25 = 36 */
+    /* 36.4 * 1.4 = 50.96 */
+    [src = 'bucketD'] {
+      marker-width: 51;
+      marker-comp-op: hard-light;
+    }
+    /* points_count > 144 * 0.33333333333333337 = 48 */
+    /*50.96 * 1.4 = 71.34*/
+    [src = 'bucketC'] {
+      marker-width: 71;
+      marker-comp-op: hard-light;
+    }
+    /* points_count > 144 * 0.4166666666666667 = 60 */
+    /*71.34 * 1.4 = 99.88*/
+    [src = 'bucketB'] {
+      marker-width: 100;
+      marker-comp-op: hard-light;
+    }
+    /* points_count > 144 * 0.5 = 72 */
+    /*99.88 * 1.4 = 139.83*/
+    [src = 'bucketA'] {
+      marker-width: 137;
+      marker-comp-op: hard-light;
+    }
+    ::labels {
+      text-size: 0;
+      text-fill: @txt;
+      text-opacity: 1;
+      text-name: [points_count];
+      text-face-name: 'Open Sans Semibold';
+      text-halo-fill: @halo;
+      text-halo-radius: 0;
+      text-allow-overlap: true;
+
+      [src = 'bucketE'] {
+        text-size: 17;
+        text-halo-radius: 0.5;
+      }
+      [src = 'bucketD'] {
+        text-size: 18;
+        text-halo-radius: 0.5;
+      }
+      [src = 'bucketC'] {
+        text-size: 22;
+        text-halo-radius: .7;
+        text-character-spacing: 1;
+      }
+      [src = 'bucketB'] {
+        text-size: 24;
+        text-halo-radius: 0.5;
+      }
+      [src = 'bucketA'] {
+        text-size: 27;
+        text-halo-radius: 1;
+        text-character-spacing: -1;
+      }
+
+      [points_count = 1]{ text-size: 0; }
+    }
+  }
+  </style>
+</head>
+<body>
+  <div id='map'></div>
+
+  <!-- includes -->
+  <script src='https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/cartodb.js'></script>
+  <script src='https://unpkg.com/leaflet-easybutton@2.0.0/src/easy-button.js'></script>
+
+  <!-- carto pop-ups -->
+  <script type="infowindow/html" id="point_popup">
+    <div class="cartodb-popup">
+      <a href="#close" class="cartodb-popup-close-button close">x</a>
+      <div class="cartodb-popup-content-wrapper">
+        <div class="cartodb-popup-content">
+          <p><h4>description:</h4></p>
+          <p>{{description_rep}}</p>
+        </div>
+      </div>
+      <div class="cartodb-popup-tip-container"></div>
+    </div>
+  </script>
+  <script type="infowindow/html" id="cluster_popup">
+    <div class="cartodb-popup">
+      <a href="#close" class="cartodb-popup-close-button close">x</a>
+      <div class="cartodb-popup-content-wrapper">
+        <div class="cartodb-popup-content">
+          <p><h4>unique descriptions:</h4></p>
+          <p>{{desc_list}}</p>
+        </div>
+      </div>
+      <div class="cartodb-popup-tip-container"></div>
+    </div>
+  </script>
+
+  <!-- carto.js map -->
+  <script>
+  // calculate clusters
+  function cluster_sql(table, zoom, props, nquartiles) {
+    // nquartiles = number of cluster buckets
+    var grids = ["A", "B", "C", "D", "E"];
+    // var grids = ["A", "B", "C", "D"];
+    var bucket = "bucket" + grids[0];
+    var mainBucket = bucket;
+
+    var sizes = [];
+    var step = 1 / (nquartiles + 1);
+
+    for (var i = 0; i < nquartiles; i++) {
+      sizes.push( 1 - step * i)
+    }
+
+    var sql = "WITH __wrapped as (select * from signalisation_rd_tt), meta AS ( " +
+    "   SELECT greatest(!pixel_width!,!pixel_height!) as psz, ext, ST_XMin(ext) xmin, ST_YMin(ext) ymin FROM (SELECT !bbox! as ext) a " +
+    " ), " +
+    " filtered_table AS ( " +
+    "   SELECT t.* FROM <%= table %> t, meta m WHERE t.the_geom_webmercator && m.ext " +
+    " ), ";
+
+    for (var i = 0; i<nquartiles; i++) {
+      bucket = "bucket" + grids[i];
+
+      if (i == 0){
+        sql += mainBucket + "_snap AS (SELECT ST_SnapToGrid(f.the_geom_webmercator, 0, 0, m.psz * <%= size %>, m.psz * <%= size %>) the_geom_webmercator, count(*) as points_count, 1 as cartodb_id, array_agg(f.cartodb_id) AS id_list"
+      }
+      if (i > 0){
+        sql += "\n" + bucket + "_snap AS (SELECT ST_SnapToGrid(f.the_geom_webmercator, 0, 0, m.psz * " + sizes[i] + " * <%= size %>, m.psz * " + sizes[i] + " * <%= size %>) the_geom_webmercator, count(*) as points_count, 1 as cartodb_id, array_agg(f.cartodb_id) AS id_list "
+      }
+
+      // FOR CLUSTER POP-UP:
+      // define columns here to use in cluster pop-up
+      // point row string descriptions need to be aggregated when geometry is clustered
+      sql += ", array_agg( DISTINCT(f.description_rep) ) AS descriptions_list "
+
+      sql += " FROM filtered_table f, meta m "
+
+      if (i == 0){
+        sql += " GROUP BY ST_SnapToGrid(f.the_geom_webmercator, 0, 0, m.psz * <%= size %>, m.psz * <%= size %>), m.xmin, m.ymin), ";
+      }
+
+      if (i > 0){
+        sql += " WHERE cartodb_id NOT IN (select unnest(id_list) FROM " + mainBucket + ") ";
+
+        for (var j = 1; j<i; j++) {
+          bucket2 = "bucket" + grids[j];
+          sql += " AND cartodb_id NOT IN (select unnest(id_list) FROM " + bucket2 + ") ";
+        }
+
+        sql += " GROUP BY ST_SnapToGrid(f.the_geom_webmercator, 0, 0, m.psz * " + sizes[i] + " * <%= size %>, m.psz * " + sizes[i] + " * <%= size %>), m.xmin, m.ymin), ";
+
+      }
+
+      sql +=  bucket + "  AS (SELECT * FROM " + bucket + "_snap WHERE points_count > ";
+
+      if (i == nquartiles - 1) {
+        // sql += " GREATEST(<%= size %> * 0.1, 2) ";
+        sql += " 2 ";
+      } else {
+        // sql += " <%= size %> * " + sizes[i];
+        sql += " <%= size %> * " + sizes[i] * .5;
+      }
+
+      sql += " ) ";
+
+      if (i < nquartiles - 1) sql += ", ";
+
+    }
+
+    sql += " SELECT the_geom_webmercator, 1 points_count, cartodb_id, ARRAY[cartodb_id] as id_list, ";
+
+    // FOR CLUSTER POP-UP:
+    // un-clustered rows also need the aggregated columns you created for cluster rows so UNION will work
+    // descriptions_list column needs to exist for UNION & will be turned to string from array later
+    sql += " ARRAY[description_rep] AS descriptions_list, ";
+
+    sql += " 'origin' as src, cartodb_id::text cdb_list ";
+
+    // FOR CLUSTER POP-UP:
+    // desc_list column is included in cluster rows so it needs to be included for non-clustered rows to use UNION
+    sql += " , description_rep::text desc_list";
+
+    sql += " FROM filtered_table WHERE ";
+
+    for (var i = 0; i < nquartiles; i++) {
+      bucket = "bucket" + grids[i];
+      sql += "\n" + (i > 0 ? "AND " : "") + "cartodb_id NOT IN (select unnest(id_list) FROM " + bucket + ") ";
+    }
+
+    for (var i = 0; i < nquartiles; i++) {
+      bucket = "bucket" + grids[i];
+      sql += " UNION ALL SELECT *, '" + bucket + "' as src, array_to_string(id_list, ',') cdb_list";
+      // FOR CLUSTER POP-UP:
+      // create a desc_list column containing descriptions for both clustered and non-clustered rows
+      sql += ", array_to_string(descriptions_list, ', ') desc_list ";
+      sql += " FROM " + bucket;
+    }
+
+    return _.template(sql, {
+      name: table.get("name"),
+      //size: props["radius_min"],
+      size: 144, // 48 * 3 grid size
+      table: "__wrapped"
+    });
+  }
+
+  // make the map
+  function main(){
+
+    var origCenter = [45.51789504294005, -73.60994338989259],
+    origZoom = 12,
+    LMapOptions = {
+      zoom: origZoom,
+      center: origCenter
+    },
+    CARTOLyrOptions = {
+      https: true
+    }
+    mapObject = new L.Map('map', LMapOptions),
+    mq = window.matchMedia( "(max-width: 550px)" ),
+    layerCreated = false,
+    Table = Backbone.Model.extend({}),
+    clusterQuery = cluster_sql(new Table({name:'signalisation_rd_tt'}), 0, {}, 5), /* signalisation_sl_jc */
+    pointQuery = "SELECT * FROM signalisation_rd_tt",
+    noLegend = true,
+    subLayer = null, // define here so globally accessible
+    popupFields = null,
+    popupOptions = null,
+    clustered = null;
+
+    // define legend
+    var legend = new cdb.geo.ui.Legend.Custom({
+      title: "Signalisation / Parking Signs",
+      data: [
+        { name: "Code RD-TT", value: "#ED645A" }
+      ]
+    });
+
+    // for mobile only
+    // credit: https://github.com/cliffcloud/Leaflet.EasyButton
+    var homeBtn = new L.easyButton
+    (
+      '<img class="btn" id="homeIcon" src="https://s3.amazonaws.com/com.cartodb.users-assets.production/maki-icons/building-18.svg">',
+      function(){
+        // reset center & zoom on home btn click
+        mapObject.setView(origCenter, origZoom);
+      },
+      'home button',
+      'homeBtn'
+    );
+
+    var dragBtn = new L.easyButton({
+      id: '#dragBtn',
+      states: [{
+        stateName: 'drag-off',
+        icon:      '<img class="btn" id="dragOffIcon" src="https://s3.amazonaws.com/com.cartodb.users-assets.production/production/stephaniemongon/assets/20170915141253arrows4.svg">',
+        title:     'drag disabled',
+        onClick: function() {
+          toggleDrag("enable");
+          this.state('drag-on');
+        }
+      }, {
+        stateName: 'drag-on',
+        icon:      '<img class="btn" id="dragOnIcon" src="https://s3.amazonaws.com/com.cartodb.users-assets.production/production/stephaniemongon/assets/20170915141229arrows4-active.svg">',
+        title:     'drag enabled',
+        onClick: function() {
+          toggleDrag("disable");
+          this.state('drag-off');
+        }
+      }]
+    });
+
+    var legendBtn = new L.easyButton({
+      id: '#legendBtn',
+      states: [{
+        stateName: 'legend-removed',
+        icon:      '<img class="btn" id="legendOffIcon" src="https://s3.amazonaws.com/com.cartodb.users-assets.production/production/stephaniemongon/assets/20170911013907legendburger.svg">',
+        title:     'legend off',
+        onClick: function() {
+          toggleLegend();
+          this.state('legend-added');
+        }
+      }, {
+        stateName: 'legend-added',
+        icon:      '<img class="btn" id="legendOnIcon" src="https://s3.amazonaws.com/com.cartodb.users-assets.production/production/stephaniemongon/assets/20170915141238legendburger-active.svg">',
+        title:     'legend on',
+        onClick: function() {
+          toggleLegend();
+          this.state('legend-removed');
+        }
+      }]
+    });
+
+    function toggleLegend(){
+      if(noLegend){
+        // add legend
+        $('#map').append(legend.render().el);
+        noLegend = false;
+      } else {
+        // remove legend
+        $( ".cartodb-legend" ).remove();
+        noLegend = true;
+      }
+    };
+
+    function addBtns() {
+      homeBtn.addTo(mapObject);
+      legendBtn.addTo(mapObject);
+      dragBtn.addTo(mapObject);
+
+      homeBtn.disable();
+      legendBtn.disable();
+
+      // disable Leaflet zoom controls & doubleClickZoom
+      mapObject.doubleClickZoom.disable();
+      $('.leaflet-control .leaflet-control-zoom-in, .leaflet-control .leaflet-control-zoom-out').css({
+          'pointer-events': 'none'
+      });
+      $('.leaflet-bar a').css({
+          'color': '#bbb',
+          'background-color': '#f4f4f4'
+      });
+    };
+
+    function toggleDrag(onOrOff){
+      if(onOrOff == "enable"){
+        mapObject.scrollWheelZoom.enable();
+        mapObject.doubleClickZoom.enable();
+        mapObject.dragging.enable();
+        homeBtn.enable();
+        legendBtn.enable();
+
+        // enable Leaflet zoom controls & doubleClickZoom
+        mapObject.doubleClickZoom.enable();
+        $('.leaflet-control .leaflet-control-zoom-in, .leaflet-control .leaflet-control-zoom-out').css({
+            'pointer-events': 'auto'
+        });
+        $('.leaflet-bar a').css({
+            'color': '#000',
+            'background-color': '#fff'
+        })
+
+      } else {
+        mapObject.scrollWheelZoom.disable();
+        mapObject.doubleClickZoom.disable();
+        mapObject.dragging.disable();
+        homeBtn.disable();
+        legendBtn.disable();
+
+        // disable Leaflet zoom controls & doubleClickZoom
+        mapObject.doubleClickZoom.disable();
+        $('.leaflet-control .leaflet-control-zoom-in, .leaflet-control .leaflet-control-zoom-out').css({
+            'pointer-events': 'none'
+        });
+        $('.leaflet-bar a').css({
+            'color': '#bbb',
+            'background-color': '#f4f4f4'
+        });
+      }
+    };
+
+    function addPopUp(popType){
+      if (popType === "clusterPop"){
+        // cluster popup
+        popupFields = ['desc_list'],
+        popupOptions = {
+          infowindowTemplate: $('#cluster_popup').html(),
+          templateType: 'mustache'
+        };
+      } else {
+        // point pop-up
+        popupFields = ['description_rep'],
+        popupOptions = {
+          infowindowTemplate: $('#point_popup').html(),
+          templateType: 'mustache'
+        };
+      }
+      cartodb.vis.Vis.addInfowindow(mapObject, subLayer, popupFields, popupOptions);
+    };
+    function removePopUp(typ){
+      $( ".cartodb-infowindow" ).remove();
+    };
+    function removeBtns(){
+      dragBtn.state('drag-off');
+      legendBtn.state('legend-removed');
+      $( ".easy-button-container" ).remove();
+    };
+
+    // media query work-around for non-external CartoCSS
+    function onMQResult(mq){ // on initial screen size or on screen size change
+      if(layerCreated) { // if map data layer already created set sql & style for it
+        if (mq.matches) { // screen width <= 550px
+          console.log("screen width <= 550px");
+
+          removePopUp();
+
+          subLayer.setSQL(clusterQuery);
+          subLayer.setCartoCSS($("#clusterStyle").text());
+
+          addPopUp("clusterPop");
+
+          if(noLegend == false){
+            toggleLegend();
+          }
+
+          // http://leafletjs.com/reference-1.2.0.html#map-scrollwheelzoom
+          // http://leafletjs.com/reference-1.2.0.html#map-dragging
+          // http://leafletjs.com/reference-1.2.0.html#draggable-enable
+          addBtns();
+
+          toggleDrag("disable");
+
+        } else { // screen width > 550px
+          console.log("screen width > 550px");
+
+          removePopUp();
+          removeBtns();
+          subLayer.setSQL(pointQuery);
+          subLayer.setCartoCSS($("#pointStyle").text());
+          addPopUp("pointPop");
+          toggleDrag("enable");
+
+          if(noLegend){
+            toggleLegend();
+          }
+
+        }
+      } else { // if map data layer was not created yet set mapStyle and mapQuery vars but don't set sql or style for layer
+      if (mq.matches) { // screen width <= 550px
+        console.log("screen width <= 550px");
+
+        toggleDrag("disable");
+
+        // cluster style & query credit: http://bl.ocks.org/ramiroaznar/f894d952df6bab0ede6b552e0465955b
+        mapStyle = $("#clusterStyle").text();
+        mapQuery = clusterQuery;
+      } else { // screen width > 500px
+        console.log("screen width > 550px");
+
+        toggleDrag("enable");
+
+        mapStyle = $("#pointStyle").text();
+        mapQuery = pointQuery;
+      }
+    }
+  };
+
+  // detect screen width change
+  if (matchMedia) {
+    mq.addListener(onMQResult);
+    onMQResult(mq);
+  }
+
+  // define CARTO.js data layer
+  layerSource = {
+    user_name: 'stephaniemongon',
+    type: 'cartodb',
+    sublayers: [
+      {
+        sql: mapQuery,
+        cartocss: mapStyle
+      }
+    ]
+  };
+
+  // add basemap layer
+  L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>'
+  }).addTo(mapObject);
+
+
+  // add data layer
+  cartodb.createLayer(mapObject, layerSource, CARTOLyrOptions)
+        .addTo(mapObject)
+        .on('done', function(layer) {
+          layerCreated = true;
+
+          subLayer = layer.getSubLayer(0);
+
+          // console.log("mapQuery = " + mapQuery);
+
+          if (mapQuery === clusterQuery){
+            addPopUp("clusterPop");
+            addBtns();// > toggleDrag ("enable")
+          } else {
+            addPopUp("pointPop");
+            toggleLegend();
+          }
+        })
+        .on('error', function() {
+          console.log('error');
+        });
+  }
+  window.onload = main;
+  </script>
+</body>
+</html>
