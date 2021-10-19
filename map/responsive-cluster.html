@@ -387,7 +387,7 @@
       sizes.push( 1 - step * i)
     }
 
-    var sql = "WITH __wrapped as (select * from signalisation_rd_tt), meta AS ( " +
+    var sql = "WITH __wrapped as (cartodb_id, SELECT the_geom, the_geom_webmercator, code_rpa, description_rep FROM signalisation_rd_tt), meta AS ( " +
     "   SELECT greatest(!pixel_width!,!pixel_height!) as psz, ext, ST_XMin(ext) xmin, ST_YMin(ext) ymin FROM (SELECT !bbox! as ext) a " +
     " ), " +
     " filtered_table AS ( " +
@@ -497,7 +497,7 @@
     layerCreated = false,
     Table = Backbone.Model.extend({}),
     clusterQuery = cluster_sql(new Table({name:'signalisation_rd_tt'}), 0, {}, 5), /* signalisation_sl_jc */
-    pointQuery = "SELECT * FROM signalisation_rd_tt",
+    pointQuery = "SELECT cartodb_id, the_geom, the_geom_webmercator, code_rpa, description_rep FROM signalisation_rd_tt",
     noLegend = true,
     subLayer = null, // define here so globally accessible
     popupFields = null,
@@ -729,7 +729,7 @@
 
   // define CARTO.js data layer
   layerSource = {
-    user_name: 'stephaniemongon',
+    user_name: 'ztephm',
     type: 'cartodb',
     sublayers: [
       {
